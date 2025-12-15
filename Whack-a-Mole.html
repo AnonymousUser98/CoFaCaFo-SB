@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+
+<!--
+Bug: The verify button sometimes appears behind the white box in the center
+I don't have any plans to fix this because it doesn't make the CAPTCHA any less annoying or time-wasting.
+-->
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Human Verification</title>
+<style>
+	body {
+		margin: 0;
+		height: 100vh;
+		background: #f2f2f2;
+		font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+		overflow: hidden;
+	}
+
+	.box {
+		position: fixed;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		width: 360px;
+		background: #fff;
+		border: 1px solid #ccc;
+		border-radius: 6px;
+		box-shadow: 0 6px 14px rgba(0,0,0,0.12);
+		padding: 20px;
+		text-align: center;
+		z-index: 1;
+	}
+
+	.title {
+		font-size: 14px;
+		font-weight: 600;
+		margin-bottom: 6px;
+	}
+
+	.subtitle {
+		font-size: 12px;
+		color: #555;
+		margin-bottom: 12px;
+	}
+
+	.status {
+		font-size: 12px;
+		color: #666;
+		margin-top: 12px;
+		min-height: 1.4em;
+	}
+
+	#verifyBtn {
+		position: absolute;
+		padding: 10px 18px;
+		font-size: 13px;
+		background: #1976d2;
+		color: #fff;
+		border: none;
+		border-radius: 4px;
+		cursor: pointer;
+		transition: transform 0.05s linear;
+		user-select: none;
+	}
+</style>
+</head>
+<body>
+
+<div class="box">
+	<div class="title">Human Verification</div>
+	<div class="subtitle">Click the Verify button to continue</div>
+	<div class="status" id="status">
+		Awaiting interaction…
+	</div>
+</div>
+
+<button id="verifyBtn">Verify</button>
+
+<script>
+(function () {
+	const btn = document.getElementById("verifyBtn");
+	const status = document.getElementById("status");
+
+	let clicks = 0;
+	let escapes = 0;
+
+	function placeButtonRandomly() {
+		const padding = 20;
+		const maxX = window.innerWidth - btn.offsetWidth - padding;
+		const maxY = window.innerHeight - btn.offsetHeight - padding;
+
+		const x = padding + Math.random() * maxX;
+		const y = padding + Math.random() * maxY;
+
+		btn.style.left = x + "px";
+		btn.style.top = y + "px";
+	}
+
+	function distance(ax, ay, bx, by) {
+		return Math.hypot(ax - bx, ay - by);
+	}
+
+	document.addEventListener("mousemove", e => {
+		const rect = btn.getBoundingClientRect();
+		const bx = rect.left + rect.width / 2;
+		const by = rect.top + rect.height / 2;
+
+		const d = distance(e.clientX, e.clientY, bx, by);
+
+		if (d < 120) {
+			escapes++;
+			placeButtonRandomly();
+			status.textContent =
+				escapes < 5
+					? "Button repositioned for security."
+					: "Unusual pursuit behavior detected.";
+		}
+	});
+
+	btn.addEventListener("click", () => {
+		clicks++;
+		status.textContent = "Click registered. Verifying…";
+
+		setTimeout(() => {
+			status.textContent =
+				clicks < 3
+					? "Verification incomplete. Please click Verify again."
+					: "Additional verification required for accuracy.";
+
+			placeButtonRandomly();
+		}, 600);
+	});
+
+	window.addEventListener("resize", placeButtonRandomly);
+
+	placeButtonRandomly();
+})();
+</script>
+
+</body>
+</html>

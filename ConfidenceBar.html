@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+
+<!--
+Bugs that I don't plan to fix (because fixing them wouldn't do anything to make it more convincing or waste extra time):
+- When you click on a square in the grid, clicking it again won't deselect it.
+- When you type the string, the Continue button stays highlighted even if you modify the string.
+-->
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Human Confidence Verification</title>
+<style>
+	body {
+		margin: 0;
+		height: 100vh;
+		background: #f2f2f2;
+		font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.box {
+		width: 420px;
+		background: #fff;
+		border: 1px solid #ccc;
+		border-radius: 6px;
+		box-shadow: 0 6px 14px rgba(0,0,0,0.12);
+		padding: 20px;
+	}
+
+	.title {
+		font-size: 14px;
+		font-weight: 600;
+		margin-bottom: 6px;
+	}
+
+	.subtitle {
+		font-size: 12px;
+		color: #555;
+		margin-bottom: 14px;
+	}
+
+	.confidence-label {
+		font-size: 12px;
+		margin-bottom: 6px;
+	}
+
+	.confidence-bar {
+		height: 10px;
+		background: #e0e0e0;
+		border-radius: 5px;
+		overflow: hidden;
+		margin-bottom: 12px;
+	}
+
+	.confidence-fill {
+		height: 100%;
+		width: 0%;
+		background: linear-gradient(90deg, #4caf50, #8bc34a);
+		transition: width 0.6s ease;
+	}
+
+	.task {
+		font-size: 13px;
+		margin-bottom: 10px;
+	}
+
+	input[type="text"] {
+		width: 100%;
+		padding: 8px;
+		font-size: 13px;
+		box-sizing: border-box;
+	}
+
+	.grid {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 6px;
+		margin-top: 8px;
+	}
+
+	.cell {
+		height: 56px;
+		background: #eee;
+		border-radius: 4px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		cursor: pointer;
+		user-select: none;
+		font-size: 12px;
+	}
+
+	.cell.selected {
+		background: #c8e6c9;
+	}
+
+	button {
+		width: 100%;
+		padding: 10px;
+		font-size: 13px;
+		background: #1976d2;
+		color: #fff;
+		border: none;
+		border-radius: 4px;
+		cursor: pointer;
+		margin-top: 10px;
+	}
+
+	button:disabled {
+		background: #aaa;
+		cursor: default;
+	}
+
+	.status {
+		font-size: 12px;
+		color: #666;
+		margin-top: 12px;
+		min-height: 1.4em;
+	}
+
+	.footer {
+		font-size: 10px;
+		color: #999;
+		margin-top: 16px;
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
+</style>
+</head>
+<body>
+
+<div class="box">
+	<div class="title">Human Verification</div>
+	<div class="subtitle">Building confidence in interaction authenticity</div>
+
+	<div class="confidence-label">
+		Confidence level: <b><span id="confidenceValue">0</span>%</b>
+	</div>
+
+	<div class="confidence-bar">
+		<div class="confidence-fill" id="confidenceFill"></div>
+	</div>
+
+	<div class="task" id="taskArea"></div>
+
+	<button id="continueBtn" disabled>Continue</button>
+
+	<div class="status" id="status">
+		Awaiting interaction…
+	</div>
+
+	<div class="footer">
+		<span>Powered by SecureVerify™</span>
+		<span>Behavioral Model v4.2</span>
+	</div>
+</div>
+
+<script>
+(function () {
+	const taskArea = document.getElementById("taskArea");
+	const btn = document.getElementById("continueBtn");
+	const status = document.getElementById("status");
+	const fill = document.getElementById("confidenceFill");
+	const value = document.getElementById("confidenceValue");
+
+	let confidence = 0;
+
+	function updateConfidence(delta) {
+		confidence += delta;
+		if (confidence > 96) confidence = 92 + Math.random() * 4; // never stable
+		if (confidence < 0) confidence = 0;
+		fill.style.width = confidence + "%";
+		value.textContent = Math.floor(confidence);
+	}
+
+	function newTask() {
+		btn.disabled = true;
+		taskArea.innerHTML = "";
+		status.textContent = "Analyzing interaction patterns…";
+
+		const roll = Math.random();
+
+		if (roll < 0.33) {
+			// Typing task
+			const words = ["human", "verify", "confirm", "interaction", "person", "mwo#7vDz", "INnD2p+3", "H8,/bi-L", "p*3l+MQ3"];
+			const word = words[Math.floor(Math.random() * words.length)];
+			taskArea.innerHTML =
+				`Type "<b>${word}</b>" exactly as shown:<br><br>
+				<input type="text" id="textInput">`;
+
+			const input = taskArea.querySelector("input");
+			input.addEventListener("input", () => {
+				if (input.value === word) {
+					btn.disabled = false;
+				}
+			});
+
+		} else if (roll < 0.66) {
+			// Image-like grid task
+			taskArea.textContent = "Select all squares that feel intentionally placed:";
+			const grid = document.createElement("div");
+			grid.className = "grid";
+
+			let selected = 0;
+			const needed = 3;
+
+			for (let i = 0; i < 9; i++) {
+				const cell = document.createElement("div");
+				cell.className = "cell";
+				cell.textContent = Math.random() < 0.5 ? "🟩" : "⏹️";
+				cell.addEventListener("click", () => {
+					if (!cell.classList.contains("selected")) {
+						cell.classList.add("selected");
+						selected++;
+						if (selected >= needed) btn.disabled = false;
+					}
+				});
+				grid.appendChild(cell);
+			}
+			taskArea.appendChild(grid);
+
+		} else {
+			// Idle task
+			let seconds = 4 + Math.floor(Math.random() * 5);
+			taskArea.textContent = `Remain idle for ${seconds} seconds…`;
+
+			const timer = setInterval(() => {
+				seconds--;
+				taskArea.textContent = `Remain idle for ${seconds} seconds…`;
+				if (seconds <= 0) {
+					clearInterval(timer);
+					btn.disabled = false;
+				}
+			}, 1000);
+		}
+	}
+
+	btn.addEventListener("click", () => {
+		btn.disabled = true;
+		status.textContent = "Updating confidence model…";
+
+		setTimeout(() => {
+			const delta = 5 + Math.random() * 10;
+			updateConfidence(delta);
+
+			if (Math.random() < 0.3) {
+				status.textContent = "Confidence fluctuation detected. Reinforcing model.";
+				updateConfidence(-5 - Math.random() * 5);
+			} else {
+				status.textContent = "Confidence increased, but additional data required.";
+			}
+
+			newTask();
+		}, 700 + Math.random() * 1200);
+	});
+
+	newTask();
+})();
+</script>
+
+</body>
+</html>

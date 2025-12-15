@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Human Verification</title>
+<style>
+:root{
+	--card-bg:#fff;
+	--ui-bg:#f5f7fb;
+	--accent:#2468ff;
+	--muted:#6b7280;
+	--success:#16a34a;
+}
+html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial;}
+body{display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#eef2ff,#f8fafc);padding:24px;color:#0f172a}
+.frame{width:780px;background:var(--card-bg);border-radius:10px;box-shadow:0 10px 30px rgba(2,6,23,0.08);padding:18px;}
+.header{display:flex;align-items:center;gap:12px}
+.shield{
+	width:46px;height:46px;border-radius:8px;background:linear-gradient(180deg,var(--accent),#1a4ad8);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;letter-spacing:0.5px;font-size:18px;
+}
+.title{font-size:16px;font-weight:600}
+.subtitle{font-size:12px;color:var(--muted);margin-top:2px}
+.panel{display:flex;gap:18px;margin-top:14px}
+.left{flex:1}
+.challenge{background:var(--ui-bg);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:10px;align-items:center;min-height:300px;justify-content:flex-start}
+.instructions{font-size:13px;color:var(--muted);text-align:center}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%}
+.tile{
+	background:#e9eefc;border-radius:6px;height:90px;overflow:hidden;position:relative;cursor:pointer;display:flex;align-items:center;justify-content:center;
+	border:2px solid transparent;box-sizing:border-box;user-select:none;
+}
+.tile img{width:100%;height:100%;object-fit:cover;display:block;filter:grayscale(10%);}
+.tile.selected{outline:3px solid rgba(36,104,255,0.18);border-color:rgba(36,104,255,0.22);}
+.tile .check{
+	position:absolute;right:6px;top:6px;background:rgba(255,255,255,0.9);border-radius:4px;padding:3px 6px;font-size:11px;color:var(--accent);
+	display:none;border:1px solid rgba(36,104,255,0.12)
+}
+.tile.selected .check{display:block}
+.controls{display:flex;align-items:center;gap:10px;justify-content:space-between;margin-top:10px;width:100%}
+.btn{
+	background:#fff;border:1px solid rgba(15,23,42,0.06);padding:8px 14px;border-radius:6px;font-weight:600;cursor:pointer;
+	box-shadow:0 2px 6px rgba(2,6,23,0.04);
+}
+.btn.primary{background:var(--accent);color:#fff;border-color:transparent}
+.btn.ghost{background:transparent;width:105px;}
+.status{font-size:12px;color:var(--muted)}
+.logbox{background:#0b1220;color:#cde8ff;font-family:monospace;padding:8px;border-radius:6px;height:92px;overflow:auto;font-size:12px;width:342px;}
+.footer{display:flex;gap:8px;align-items:center;margin-top:12px}
+.tiny{font-size:11px;color:var(--muted)}
+.progress{height:6px;background:#e6eefc;border-radius:8px;overflow:hidden;flex:1}
+.progress > i{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--accent),#6b9bff);transition:width 2s linear}
+.muted-link{font-size:12px;color:var(--muted);text-decoration:underline;cursor:pointer}
+/* Accessibility focus */
+.tile:focus{outline:3px dashed rgba(36,104,255,0.25);outline-offset:2px}
+
+#bottomGap {
+	width: 200px;
+	display: flex;
+	gap: 8px;
+	align-items: center;
+}
+
+#progressDisplay {
+	width: 200px;
+	display: none;
+	gap: 8px;
+	align-items: center;
+	background: var(--ui-bg);
+	padding: 8px;
+	border-radius: 6px;
+}
+
+</style>
+</head>
+<body>
+<div class="frame" role="main" aria-labelledby="title">
+	<div class="header">
+	<div class="shield" aria-hidden="true">🔒</div>
+	<div>
+		<div id="title" class="title">Human Verification</div>
+		<div class="subtitle">Complete the visual challenge to proceed — automated checks in progress...</div>
+	</div>
+	</div>
+
+	<div class="panel" aria-live="polite">
+	<div class="left">
+		<div class="challenge" id="challenge" aria-label="verification challenge">
+		<div class="instructions" id="instr">Select all images that contain a <strong id="target">bicycle</strong>.</div>
+		<div class="grid" id="grid" tabindex="0"></div>
+
+		<div class="controls">
+			<div style="display:flex;gap:8px;align-items:center">
+			<button class="btn ghost" id="refresh">Reload tiles</button>
+			<!--<div class="status" id="status">Cycle <span id="cycle">1</span> — Attempts: <span id="attempts">0</span></div>-->
+			</div>
+
+			<div style="display:flex;align-items:center;gap:8px">
+			<div id="bottomGap"></div>
+			<button class="btn primary" id="nextBtn">Next</button>
+			</div>
+		</div>
+
+		</div>
+	</div>
+
+	<div style="width:500px;display:flex;flex-direction:column;gap:10px">
+		<div style="font-size:13px;color:var(--muted);">Anti-fraud telemetry</div>
+		<div class="logbox" id="log" aria-live="polite" aria-atomic="false"></div>
+		<div style="display:flex;gap:8px;align-items:center">
+		<div class="tiny">Connection:</div><div class="muted-link" id="conn">Synchronizing...</div>
+		</div>
+		<div class="tiny">This verification may require multiple cycles. For your safety, we run deep heuristics. This may contain information about your browser version. </div>
+		<br/>
+		<span id="verifyText" style="display: none;">Verifying, please wait...</span>
+		<div id="progressDisplay">
+			<div class="progress" aria-hidden="true"><i id="progressBar"></i></div>
+			<div class="tiny" id="eta">⏳ 0s</div>
+		</div>
+	</div>
+	</div>
+
+	<div class="footer">
+	<div class="tiny">Need help? <span class="muted-link" id="help">Contact support</span></div>
+	<div style="flex:1"></div>
+	<div class="tiny">© 2025 Botfighters Inc. All rights reserved.</div>
+	</div>
+</div>
+
+<script>
+/*
+Endless fake CAPTCHA
+- Does NOT impersonate any particular vendor or product.
+- Intentionally never completes verification; "Next" only regenerates a new cycle.
+- Images use picsum.photos as placeholders. Replace URLs if you want specific images.
+*/
+
+(function(){
+const grid = document.getElementById('grid');
+const instr = document.getElementById('instr');
+const targetEl = document.getElementById('target');
+const nextBtn = document.getElementById('nextBtn');
+const refreshBtn = document.getElementById('refresh');
+const log = document.getElementById('log');
+const conn = document.getElementById('conn');
+const progressBar = document.getElementById('progressBar');
+const eta = document.getElementById('eta');
+const cycleEl = document.getElementById('cycle');
+const attemptsEl = document.getElementById('attempts');
+
+const progressDisplay = document.getElementById('progressDisplay');
+const verifyText = document.getElementById('verifyText')
+
+let cycle = 1;
+let attempts = 0;
+let seedCounter = Math.floor(Math.random()*9999);
+let busy = false;
+
+// sample target phrases (crypto-ish to look 'official')
+const targets = [
+	'bicycle','crosswalk','building','mountain','skyscraper',
+	'forest','tree','sunset','human','body of water','road','household object'
+];
+
+function logLine(txt, slow=false){
+	const p = document.createElement('div');
+	p.textContent = txt;
+	log.appendChild(p);
+	log.scrollTop = log.scrollHeight;
+	if (slow) {
+	// small delay to simulate read-out
+	return new Promise(resolve => setTimeout(resolve, 450));
+	} else {
+	return Promise.resolve();
+	}
+}
+
+function rand(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+
+function makeTile(url, id){
+	const t = document.createElement('div');
+	t.className = 'tile';
+	t.tabIndex = 0;
+	t.dataset.id = id;
+	const img = document.createElement('img');
+	img.src = url;
+	img.alt = 'verification tile';
+	const chk = document.createElement('div');
+	chk.className = 'check';
+	chk.textContent = '✓';
+	t.appendChild(img);
+	t.appendChild(chk);
+
+	t.addEventListener('click', ()=>{
+	t.classList.toggle('selected');
+	});
+	t.addEventListener('keydown', (e)=>{
+	if (e.key === 'Enter' || e.key === ' '){
+		e.preventDefault();
+		t.click();
+	}
+	});
+	return t;
+}
+
+function generateGrid(){
+	grid.innerHTML = '';
+	// pick a target
+	const target = targets[(seedCounter + cycle) % targets.length];
+	targetEl.textContent = target;
+
+	// fill 9 tiles with seeded picsum images (seed to change images each cycle)
+	for(let i=0;i<9;i++){
+	const seed = seedCounter + cycle*31 + i;
+	const size = 150 + ((i%3)*10);
+	const url = `https://picsum.photos/seed/${seed}/${size}/${size}`;
+	const tile = makeTile(url, seed);
+	grid.appendChild(tile);
+	}
+}
+
+async function simulateReview(){
+	busy = true;
+	nextBtn.disabled = true;
+	refreshBtn.disabled = true;
+
+	progressDisplay.style.display="flex";
+	verifyText.style.display="inherit";
+
+	const etaSeconds = 8 + rand(6,16); // variable stall
+	let remaining = etaSeconds;
+	progressBar.style.width = '0%';
+	eta.textContent = `⏳ ${remaining}s`;
+
+	// slowly advance progress
+	const start = Date.now();
+	const total = etaSeconds*1000;
+	const update = setInterval(()=>{
+	const elapsed = Date.now()-start;
+	const pct = Math.min(100, Math.floor((elapsed/total)*100));
+	progressBar.style.width = pct + '%';
+	const secsLeft = Math.max(0, Math.ceil((total - elapsed)/1000));
+	eta.textContent = `⏳ ${secsLeft}s`;
+	}, 300);
+
+	// fake console-like logs while "reviewing"
+	await logLine('Running heuristic scan…', true);
+	await logLine('Analyzing click patterns…', true);
+	await logLine('Validating image entropy…', true);
+	await logLine('Cross-referencing telemetry…', true);
+	await logLine('Submitting to manual queue for analyst review…', true);
+	await new Promise(r => setTimeout(r, etaSeconds*1000 * 0.6));
+	await logLine('Queue position: ' + rand(2,45));
+	await new Promise(r => setTimeout(r, etaSeconds*1000 * 0.3));
+	await logLine('Analyst reviewed: inconclusive — additional cycle required');
+	clearInterval(update);
+
+	// small flicker before re-enable
+	progressBar.style.width = '100%';
+	eta.textContent = '⏳ 0s';
+	attempts++;
+	attemptsEl.textContent = attempts;
+	conn.textContent = 'Synchronizing…';
+	busy = false;
+	nextBtn.disabled = false;
+	refreshBtn.disabled = false;
+	// intentionally never show success; instead prompt another cycle
+	logLine('Verification paused — starting supplemental cycle.');
+	// increment cycle and regenerate grid
+	cycle++;
+	cycleEl.textContent = cycle;
+	generateGrid();
+	// nudge connection text to feel alive
+	setTimeout(()=>{ conn.textContent = 'stable'; }, 1600);
+	progressDisplay.style.display = "none";
+	verifyText.style.display="none";
+}
+
+// initial render
+generateGrid();
+logLine('Initializing verification module...');
+logLine('Telemetry handshake established.');
+logLine('Note: multiple cycles may be required for certain wallet providers.');
+
+nextBtn.addEventListener('click', ()=>{
+	if (busy) return;
+	// If user selected nothing, gently admonish and still waste time
+	const selected = grid.querySelectorAll('.tile.selected').length;
+	if (selected === 0 && Math.random() < 0.6){
+	logLine('No selection detected — algorithmic confidence too low.');
+	// pretend to validate a blank submission, then force another review
+	simulateReview();
+	return;
+	}
+	logLine('User submitted selection. Input confidence: ' + (30 + Math.floor(Math.random()*60)) + '%');
+	simulateReview();
+});
+
+refreshBtn.addEventListener('click', ()=>{
+	if (busy) return;
+	logLine('Tiles reloaded by user request.');
+	// small randomization in seed to change images
+	seedCounter += rand(7,83);
+	generateGrid();
+});
+
+// keyboard shortcuts for scambaiter fun: pressing 'R' reloads tiles, 'N' triggers Next
+document.addEventListener('keydown', (e)=>{
+	if (e.key.toLowerCase() === 'r') refreshBtn.click();
+	if (e.key.toLowerCase() === 'n') nextBtn.click();
+});
+
+// "support" link - open a tiny modal-like simulated interaction (still just wasting time)
+const help = document.getElementById('help');
+help.addEventListener('click', async ()=>{
+	if (busy) return;
+	logLine('Support: Opening secure help channel…');
+	logLine('Routing to compliance specialist…');
+	await new Promise(r => setTimeout(r, 1200));
+	logLine('Specialist available in 00:02:34 — please remain on this page.');
+	// increase stall a bit
+	progressBar.style.width = '20%';
+});
+
+// make grid accessible for screen readers by adding aria descriptions per tile
+function updateAria(){
+	const tiles = grid.querySelectorAll('.tile');
+	tiles.forEach((t,idx)=>{
+	t.setAttribute('role','button');
+	t.setAttribute('aria-label', 'tile ' + (idx+1) + '. Click to select.');
+	});
+}
+updateAria();
+
+// subtle periodic log noise to keep scammer watching
+setInterval(()=>{
+	const msgs = [
+	'Telemetry sync OK.',
+	'Re-evaluating heuristics.',
+	'Entropy check: OK.',
+	'Checking cookie provenance.',
+	'Synchronizing with remote anchors.'
+	];
+	logLine(msgs[Math.floor(Math.random()*msgs.length)]);
+}, 18000);
+
+})();
+</script>
+</body>
+</html>

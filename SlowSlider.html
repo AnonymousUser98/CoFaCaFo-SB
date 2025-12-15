@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Human Verification</title>
+<style>
+	body {
+		font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+		background: #f2f2f2;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		height: 100vh;
+		margin: 0;
+	}
+
+	.captcha-box {
+		background: #fff;
+		border: 1px solid #ccc;
+		border-radius: 6px;
+		width: 360px;
+		padding: 20px;
+		box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+	}
+
+	.title {
+		font-size: 14px;
+		font-weight: 600;
+		margin-bottom: 12px;
+	}
+
+	.instruction {
+		font-size: 13px;
+		color: #444;
+		margin-bottom: 16px;
+	}
+
+	.slider-container {
+		position: relative;
+		height: 40px;
+		background: #e0e0e0;
+		border-radius: 20px;
+		overflow: hidden;
+	}
+
+	.slider-progress {
+		position: absolute;
+		height: 100%;
+		width: 0%;
+		background: linear-gradient(90deg, #4caf50, #81c784);
+		transition: width 0.1s linear;
+	}
+
+	.slider-handle {
+		position: absolute;
+		top: 4px;
+		left: 4px;
+		width: 32px;
+		height: 32px;
+		background: #fff;
+		border-radius: 50%;
+		border: 1px solid #aaa;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 14px;
+		user-select: none;
+	}
+
+	.status {
+		font-size: 12px;
+		color: #666;
+		margin-top: 12px;
+		min-height: 1.2em;
+	}
+
+	.footer {
+		font-size: 10px;
+		color: #999;
+		margin-top: 16px;
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
+
+	.spinner {
+		width: 14px;
+		height: 14px;
+		border: 2px solid #ccc;
+		border-top-color: #666;
+		border-radius: 50%;
+		animation: spin 1s linear infinite;
+	}
+
+	@keyframes spin {
+		to { transform: rotate(360deg); }
+	}
+</style>
+</head>
+<body>
+
+<div class="captcha-box">
+	<div class="title">Human Verification</div>
+	<div class="instruction">
+		Please drag the slider slowly to verify human-like interaction.
+	</div>
+
+	<div class="slider-container" id="track">
+		<div class="slider-progress" id="progress"></div>
+		<div class="slider-handle" id="handle">⇢</div>
+	</div>
+
+	<div class="status" id="status">
+		Movement analysis pending…
+	</div>
+
+	<div class="footer">
+		<span>Protected by SecureVerify™</span>
+		<div class="spinner"></div>
+	</div>
+</div>
+
+<script>
+(function () {
+	const handle = document.getElementById("handle");
+	const track = document.getElementById("track");
+	const progress = document.getElementById("progress");
+	const status = document.getElementById("status");
+
+	let dragging = false;
+	let startX = 0;
+	let lastMoveTime = 0;
+	let progressValue = 0;
+
+	const maxProgress = 100;
+	const requiredDuration = 15000; // 15 seconds minimum
+	let dragStartTime = null;
+
+	function reset(reason) {
+		progressValue = 0;
+		handle.style.left = "4px";
+		progress.style.width = "0%";
+		dragStartTime = null;
+		status.textContent = reason || "Movement pattern not human-like. Please try again.";
+	}
+
+	handle.addEventListener("mousedown", e => {
+		dragging = true;
+		startX = e.clientX;
+		lastMoveTime = performance.now();
+		dragStartTime = performance.now();
+		status.textContent = "Analyzing movement pattern…";
+		document.body.style.userSelect = "none";
+	});
+
+	document.addEventListener("mouseup", () => {
+		dragging = false;
+		document.body.style.userSelect = "";
+	});
+
+	document.addEventListener("mousemove", e => {
+		if (!dragging) return;
+
+		const now = performance.now();
+		const deltaTime = now - lastMoveTime;
+		const deltaX = e.clientX - startX;
+
+		// Too fast = suspicious
+		if (deltaTime < 10 || Math.abs(deltaX) > 20) {
+			reset("Movement speed exceeded human threshold.");
+			dragging = false;
+			return;
+		}
+
+		lastMoveTime = now;
+		startX = e.clientX;
+
+		// Slow incremental progress
+		progressValue += 0.15;
+		if (progressValue > maxProgress) progressValue = maxProgress;
+
+		const trackWidth = track.clientWidth - 40;
+		const left = 4 + (trackWidth * (progressValue / 100));
+
+		handle.style.left = left + "px";
+		progress.style.width = progressValue + "%";
+
+		const elapsed = now - dragStartTime;
+
+		if (elapsed < requiredDuration) {
+			status.textContent = "Verifying human behavior… " +
+				Math.floor(elapsed / 1000) + "s analyzed";
+		} else {
+			// Almost there… but not quite
+			status.textContent = "Final behavioral confirmation in progress…";
+			if (Math.random() < 0.01) {
+				reset("Micro-movement irregularity detected.");
+				dragging = false;
+			}
+		}
+	});
+})();
+</script>
+
+</body>
+</html>
