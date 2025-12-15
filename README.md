@@ -54,6 +54,12 @@ Just like an endless image CAPTCHA, but with some interesting questions. Please 
 <img width="872" height="762" alt="screenshot" src="https://github.com/user-attachments/assets/0263f151-2746-48a8-8125-b4993258e57f" />\
 Type the words that appear before they reach the bottom of the screen. It starts out simple, but you'll eventually find yourself trying to type "pneumonoultramicroscopicsilicovolcanoconiosis" in less than 10 seconds.
 
+## Describe the Image
+**File:** `DescribePhoto.html`
+
+<img width="316" height="336" alt="screenshot" src="https://github.com/user-attachments/assets/8b744512-86da-400d-86ec-92ca8149c012" />\
+This CAPTCHA shows you a random image from Picsum and makes you describe it. It claims to "analyze your response", and then it just repeats.
+
 # Other Information
 The name _CoFaCaFo-SB_ stands for **Co**llection of **Fa**ke **CA**PTCHAs **fo**r **S**cam**b**aiters. The letter _O_ is pronounced like the one in "code", and the _A_ is pronounced like the one in "hat". The _SB_ letters at the end are pronounced individually (you say each letter).
 
