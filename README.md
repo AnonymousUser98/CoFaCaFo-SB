@@ -34,3 +34,7 @@ This one is just like a slider CAPTCHA (where you need to slide the slider from 
 
 <img width="791" height="455" alt="screenshot" src="https://github.com/user-attachments/assets/0ad338e3-4c84-4977-9975-f452b3e929d6" />\
 It asks you to click a button, you move your cursor near the button, and the button moves to a random position. Unless you have a touchscreen, it's impossible to actually click the button (and when you do, it doesn't do anything).
+
+# License Notice
+This project is available under the MIT license, so anyone can use it. Scambaiters, feel free to use these in your fake websites. You can modify them however you want.\
+Any copyright or trademark text that appears in within the webpages is purely visual and has nothing to do with the rights of this project. It's only there to make it more convincing to scammers.
