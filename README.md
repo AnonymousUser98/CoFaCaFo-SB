@@ -1,2 +1,36 @@
-# CoFaCaFo-SB
+# *Co*llection of *Fa*ke *CA*PTCHAs *fo*r *S*cam*b*aiters
 A collection of fake CAPTCHAs for scambaiters to use on their fake Bitcoin websites.
+ChatGPT created most of the code for these (I just made a few changes).
+
+## Classic but Endless
+**File:** `Endless.html`
+
+<img width="1268" height="814" alt="screenshot" src="https://github.com/user-attachments/assets/c62cb64d-8414-4126-afee-1da8dea38634" />\
+This looks and behaves just like an average image-based CAPTCHA, but it never ends. The _Next_ button doesn't turn into a _Verify_ button.\
+It connects to an external website, so you don't need to provide the images. If you want to provide images, feel free to modify the program.
+
+_Formerly [AnonymousUser98/EndlessCaptcha](https://github.com/AnonymousUser98/EndlessCaptcha)_
+
+## The Confidence Bar
+**File:** `ConfidenceBar.html`
+
+<img width="745" height="743" alt="screenshot" src="https://github.com/user-attachments/assets/483e5f89-3eeb-4419-aed0-48e094b03a40" />\
+This fake CAPTCHA asks you to type a word (or some random text), click all the squares that feel "intentionally placed", or just wait for a few seconds. Each time you do an action, the confidence level goes up. Once it reaches 95%, it starts randomly jumping between 80% and 95%. It never reaches 100%.
+
+## It's Almost Done
+**File:** `NeverFinish.html`
+
+<img width="674" height="391" alt="screenshot" src="https://github.com/user-attachments/assets/43f6dac5-1c92-43ac-8a24-2408e1a18d34" />\
+This one is pretty simple: you click a button, it does some "verification checks", it tells you it's almost done, and the cycle repeats.
+
+## Super-Slow Slider
+**File:** `SlowSlider.html`
+
+<img width="656" height="366" alt="screenshot" src="https://github.com/user-attachments/assets/ffa3dcd7-daeb-41ad-9eb3-c9557db97a7d" />\
+This one is just like a slider CAPTCHA (where you need to slide the slider from left to right). The only difference is that you need to move the slider **very slowly**. If you're too fast, you need to start over.
+
+## Whack-a-Mole
+**File:** `Whack-a-Mole.html`
+
+<img width="791" height="455" alt="screenshot" src="https://github.com/user-attachments/assets/0ad338e3-4c84-4977-9975-f452b3e929d6" />\
+It asks you to click a button, you move your cursor near the button, and the button moves to a random position. Unless you have a touchscreen, it's impossible to actually click the button (and when you do, it doesn't do anything).
