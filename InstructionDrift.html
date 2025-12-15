@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Verification Required</title>
+
+<style>
+body {
+	font-family: system-ui, sans-serif;
+	background: #f4f4f4;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 100vh;
+	margin: 0;
+}
+
+#captcha {
+	background: #fff;
+	width: 480px;
+	padding: 18px;
+	border-radius: 6px;
+	box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+}
+
+h2 {
+	font-size: 18px;
+	margin: 0 0 10px;
+}
+
+#instruction {
+	font-size: 14px;
+	margin-bottom: 12px;
+}
+
+.grid {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 6px;
+}
+
+.tile {
+	position: relative;
+	cursor: pointer;
+	border-radius: 4px;
+	overflow: hidden;
+}
+
+.tile img {
+	width: 100%;
+	height: 100%;
+	display: block;
+}
+
+.tile.selected::after {
+	content: "✓";
+	position: absolute;
+	top: 4px;
+	right: 6px;
+	background: rgba(0,0,0,0.6);
+	color: #fff;
+	font-size: 14px;
+	padding: 2px 6px;
+	border-radius: 3px;
+}
+
+button {
+	width: 100%;
+	margin-top: 12px;
+	padding: 10px;
+	font-size: 15px;
+	background: #1976d2;
+	color: white;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
+}
+
+button:hover {
+	background: #1565c0;
+}
+
+#status {
+	font-size: 13px;
+	color: #555;
+	margin-top: 8px;
+	min-height: 1.2em;
+}
+</style>
+</head>
+
+<body>
+<div id="captcha">
+	<h2>Select all applicable images</h2>
+	<div id="instruction"></div>
+
+	<div class="grid" id="grid"></div>
+
+	<button onclick="nextRound()">Verify</button>
+	<div id="status"></div>
+</div>
+
+<script>
+const objects = [
+	"bicycle",
+	"bus stop",
+	"traffic light",
+	"tree",
+	"dog"
+];
+
+const driftStages = [
+	obj => `Select all images that contain a ${obj}.`,
+	obj => `Select all images that might contain a ${obj}.`,
+	obj => `Select all images where you might see a ${obj}.`,
+	obj => `Select all images that are associated with a ${obj}.`
+];
+
+let currentObject = null;
+let driftIndex = 0;
+let round = 0;
+
+const grid = document.getElementById("grid");
+const instruction = document.getElementById("instruction");
+const status = document.getElementById("status");
+
+startNewObject();
+
+function startNewObject() {
+	currentObject = objects[Math.floor(Math.random() * objects.length)];
+	driftIndex = 0;
+	round = 0;
+	loadRound();
+}
+
+function loadRound() {
+	grid.innerHTML = "";
+	status.textContent = "";
+
+	instruction.textContent = driftStages[driftIndex](currentObject);
+
+	for (let i = 0; i < 9; i++) {
+		const seed = `${currentObject}-${round}-${i}-${Math.random()}`;
+		const size = 160;
+		const url = `https://picsum.photos/seed/${seed}/${size}/${size}`;
+
+		const tile = document.createElement("div");
+		tile.className = "tile";
+
+		const img = document.createElement("img");
+		img.src = url;
+
+		tile.appendChild(img);
+		tile.onclick = () => tile.classList.toggle("selected");
+
+		grid.appendChild(tile);
+	}
+}
+
+function nextRound() {
+	status.textContent = "Analyzing selections…";
+
+	setTimeout(() => {
+		round++;
+		driftIndex++;
+
+		if (driftIndex >= driftStages.length) {
+			status.textContent = "Verification criteria updated.";
+			setTimeout(startNewObject, 1200);
+		} else {
+			status.textContent = "Please refine your selection.";
+			loadRound();
+		}
+	}, 900);
+}
+</script>
+</body>
+</html>

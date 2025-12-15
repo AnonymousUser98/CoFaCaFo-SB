@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Human Verification</title>
+<style>
+body {
+	font-family: system-ui, sans-serif;
+	background: #f4f4f4;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	height: 100vh;
+	margin: 0;
+}
+
+#captchaBox {
+	background: #fff;
+	width: 500px;
+	padding: 20px;
+	border-radius: 6px;
+	box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+	position: relative;
+	overflow: hidden;
+	height: 350px;
+	margin-bottom: 10px;
+}
+
+.wordBox {
+	position: absolute;
+	background: #1976d2;
+	color: #fff;
+	padding: 8px 12px;
+	border-radius: 4px;
+	font-size: 16px;
+	font-weight: bold;
+	user-select: none;
+}
+
+input[type="text"] {
+	width: 500px;
+	padding: 10px;
+	box-sizing: border-box;
+	font-size: 16px;
+}
+
+#message {
+	font-size: 14px;
+	margin-top: 10px;
+	color: #555;
+	min-height: 1.2em;
+	text-align: center;
+}
+
+#lives {
+	font-size: 20px;
+	margin-bottom: 6px;
+}
+</style>
+</head>
+<body>
+
+<div id="lives">❤️❤️❤️</div>
+<div id="captchaBox"></div>
+<input type="text" id="inputBox" placeholder="Type the words before they reach the bottom">
+<div id="message"></div>
+
+<script>
+const wordPools = [
+	["cat","dog","tree","sun","hat","car","box","pen","cup","book","house","scam","phone"], // short
+	["bicycle","orange","window","garden","friend","coffee","button","flower","pencil","India","Nigeria"], // medium
+	["computer","javascript","magnificent","extraordinary","pineapple","butterfly","algorithm","umbrella","fantastic","keyboard"], // long
+	["tech support scammer","antidisestablishmentarianism","pneumonoultramicroscopicsilicovolcanoconiosis","floccinaucinihilipilification","hippopotomonstrosesquipedaliophobia"] // monstrous
+];
+
+let activeWords = [];
+let totalWordsGenerated = 0;
+let speed = 0.5;
+let lives = 3;
+
+const captchaBox = document.getElementById("captchaBox");
+const inputBox = document.getElementById("inputBox");
+const message = document.getElementById("message");
+const livesDisplay = document.getElementById("lives");
+let animationFrame;
+
+// Pick a random word from a pool, avoiding duplicates among active words
+function getWord() {
+	let pool;
+	totalWordsGenerated++;
+	if (totalWordsGenerated <= 8) pool = wordPools[0];
+	else if (totalWordsGenerated <= 17) pool = wordPools[1];
+	else if (totalWordsGenerated <= 30) pool = wordPools[2];
+	else if (totalWordsGenerated <= 35) pool = wordPools[3];
+	else {
+		const len = 10 + Math.floor(Math.random()*11);
+		let s = "";
+		for(let i=0;i<len;i++) s += String.fromCharCode(97 + Math.floor(Math.random()*26));
+		return s;
+	}
+
+	let word;
+	let attempts = 0;
+	do {
+		word = pool[Math.floor(Math.random()*pool.length)];
+		attempts++;
+	} while (activeWords.some(w => w.word === word) && attempts < 10);
+
+	return word;
+}
+
+// Spawn 1 or 2 words with horizontal offsets
+function spawnWords() {
+	let num;
+	if (totalWordsGenerated <= 35) {
+		num = Math.random() < 0.1 ? 2 : 1;
+	} else {
+		num = 1;
+	}
+	const offsets = [-40, 40];
+	for(let i=0;i<num;i++){
+		const wordEl = document.createElement("div");
+		wordEl.className = "wordBox";
+		wordEl.style.top = "0px";
+
+		if(num === 2){
+			const leftCenter = captchaBox.clientWidth / 2;
+			wordEl.style.left = (leftCenter + offsets[i]) + "px";
+		} else {
+			wordEl.style.left = "50%";
+			wordEl.style.transform = "translateX(-50%)";
+		}
+
+		wordEl.textContent = getWord();
+		captchaBox.appendChild(wordEl);
+		activeWords.push({el: wordEl, word: wordEl.textContent, typed: false, reachedBottom: false});
+	}
+}
+
+function updateLives() {
+	livesDisplay.textContent = "❤️".repeat(lives);
+	if(lives <= 0){
+		alert("Verification failed. Please try again.");
+		location.reload();
+	}
+}
+
+// Animate words falling
+function animate() {
+	const height = captchaBox.clientHeight;
+	let batchReachedBottom = false; // track if any words hit bottom this frame
+	activeWords.forEach(w => {
+		if(!w.typed && !w.reachedBottom){
+			let top = parseFloat(w.el.style.top);
+			top += speed;
+			w.el.style.top = top + "px";
+
+			if(top + w.el.offsetHeight >= height){
+				w.el.remove();
+				w.typed = true;
+				w.reachedBottom = true;
+				batchReachedBottom = true;
+			}
+		}
+	});
+	if(batchReachedBottom){
+		lives--;
+		updateLives();
+		message.textContent = "A word reached the bottom!";
+	}
+	activeWords = activeWords.filter(w => !w.typed);
+	if(activeWords.length === 0) spawnWords();
+	animationFrame = requestAnimationFrame(animate);
+}
+
+// Check input
+inputBox.addEventListener("input", () => {
+	const val = inputBox.value.trim();
+	activeWords.forEach(w => {
+		if(!w.typed && val === w.word){
+			w.el.remove();
+			w.typed = true;
+			w.reachedBottom = true;
+			inputBox.value = "";
+			speed += 0.02; // gradually increase speed
+			message.textContent = "Correct!";
+		}
+	});
+	activeWords = activeWords.filter(w => !w.typed);
+	if(activeWords.length === 0) spawnWords();
+});
+
+spawnWords();
+updateLives();
+animate();
+</script>
+
+</body>
+</html>

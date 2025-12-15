@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Verification Required</title>
+
+<style>
+body {
+	font-family: system-ui, sans-serif;
+	background: #f2f2f2;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 100vh;
+	margin: 0;
+}
+
+#captchaBox {
+	background: #fff;
+	width: 460px;
+	padding: 20px;
+	border-radius: 6px;
+	box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+}
+
+h2 {
+	margin-top: 0;
+	font-size: 18px;
+}
+
+#stepInfo {
+	font-size: 13px;
+	color: #666;
+	margin-bottom: 10px;
+}
+
+.progress {
+	width: 100%;
+	height: 10px;
+	background: #ddd;
+	border-radius: 5px;
+	overflow: hidden;
+	margin-bottom: 15px;
+}
+
+.progressFill {
+	height: 100%;
+	width: 0%;
+	background: linear-gradient(90deg, #4caf50, #8bc34a);
+	transition: width 0.4s;
+}
+
+.task {
+	margin-bottom: 15px;
+	font-size: 14px;
+}
+
+input[type="text"] {
+	width: 100%;
+	padding: 8px;
+	box-sizing: border-box;
+	font-size: 14px;
+}
+
+.grid {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 6px;
+}
+
+.tile {
+	background: #e0e0e0;
+	height: 70px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	user-select: none;
+	font-size: 12px;
+	border-radius: 4px;
+}
+
+.tile.selected {
+	background: #90caf9;
+}
+
+.slider {
+	width: 100%;
+}
+
+button {
+	width: 100%;
+	padding: 10px;
+	font-size: 15px;
+	background: #1976d2;
+	color: #fff;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
+}
+
+button:hover {
+	background: #1565c0;
+}
+
+#message {
+	font-size: 13px;
+	color: #444;
+	margin-top: 10px;
+	min-height: 1.2em;
+}
+</style>
+</head>
+
+<body>
+<div id="captchaBox">
+	<h2>Human Verification</h2>
+	<div id="stepInfo"></div>
+
+	<div class="progress">
+		<div class="progressFill" id="progressFill"></div>
+	</div>
+
+	<div id="taskArea"></div>
+	<br/>
+	<button onclick="nextStep()">Continue</button>
+	<div id="message"></div>
+</div>
+
+<script>
+let currentStep = 1;
+let totalSteps = 5;
+let inflationCounter = 0;
+let taskType = "";
+let expectedText = "";
+let stepStartTime = 0;
+
+const taskArea = document.getElementById("taskArea");
+const stepInfo = document.getElementById("stepInfo");
+const progressFill = document.getElementById("progressFill");
+const message = document.getElementById("message");
+
+renderStep();
+
+function renderStep() {
+	stepInfo.textContent = `Step ${currentStep} of ${totalSteps}`;
+	progressFill.style.width = Math.min(
+		((currentStep - 1) / totalSteps) * 100,
+		99
+	) + "%";
+
+	message.textContent = "";
+	taskArea.innerHTML = "";
+	stepStartTime = Date.now();
+
+	const types = ["typing", "grid", "timing", "slider", "logic"];
+	taskType = types[Math.floor(Math.random() * types.length)];
+
+	if (taskType === "typing") renderTypingTask();
+	if (taskType === "grid") renderGridTask();
+	if (taskType === "timing") renderTimingTask();
+	if (taskType === "slider") renderSliderTask();
+	if (taskType === "logic") renderLogicTask();
+}
+
+/* ---------- TASK RENDERERS ---------- */
+
+function renderTypingTask() {
+	const phrases = [
+		"human verification process",
+		"select all applicable images",
+		"security check in progress",
+		"Are we there yet?",
+		"purple porcupine",
+		"thermodynamics get free apples"
+	];
+	expectedText = phrases[Math.floor(Math.random() * phrases.length)];
+
+	taskArea.innerHTML = `
+		<div class="task">
+			Type the following text exactly as shown:<br>
+			<strong>${expectedText}</strong>
+		</div>
+		<input type="text" id="textInput">
+	`;
+}
+
+function renderGridTask() {
+	const grid = document.createElement("div");
+	grid.className = "grid";
+
+	for (let i = 0; i < 9; i++) {
+		const tile = document.createElement("div");
+		tile.className = "tile";
+		tile.textContent = Math.random() > 0.6 ? "object" : "background";
+		tile.onclick = () => tile.classList.toggle("selected");
+		grid.appendChild(tile);
+	}
+
+	taskArea.innerHTML = `
+		<div class="task">
+			Select all tiles that could plausibly contain an object.
+		</div>
+	`;
+	taskArea.appendChild(grid);
+}
+
+function renderTimingTask() {
+	taskArea.innerHTML = `
+		<div class="task">
+			Wait briefly, then click Continue when it feels appropriate.
+		</div>
+	`;
+}
+
+function renderSliderTask() {
+	taskArea.innerHTML = `
+		<div class="task">
+			Indicate your confidence that you are human.
+		</div>
+		<input type="range" min="0" max="100" value="50" class="slider">
+	`;
+}
+
+function renderLogicTask() {
+	taskArea.innerHTML = `
+		<div class="task">
+			Which number comes next?<br>
+			<strong>2, 4, 7, 11, ?</strong>
+		</div>
+		<input type="text" id="logicInput">
+	`;
+}
+
+/* ---------- VALIDATION ---------- */
+
+function validateStep() {
+	if (taskType === "typing") {
+		const input = document.getElementById("textInput").value;
+		if (input !== expectedText) {
+			inflateSteps("Text mismatch detected.");
+			return false;
+		}
+	}
+
+	if (taskType === "timing") {
+		const elapsed = Date.now() - stepStartTime;
+		if (elapsed < 1200 || elapsed > 6000) {
+			inflateSteps("Interaction timing inconsistent.");
+			return false;
+		}
+	}
+
+	if (taskType === "logic") {
+		const val = document.getElementById("logicInput").value.trim();
+		if (val !== "16") {
+			inflateSteps("Pattern recognition inconclusive.");
+			return false;
+		}
+	}
+
+	return true;
+}
+
+/* ---------- CORE BEHAVIOR ---------- */
+
+function inflateSteps(reason) {
+	const added = Math.floor(Math.random() * 3) + 1;
+	totalSteps += added;
+	message.textContent = `${reason} Additional verification steps added.`;
+	updateStepInfo();
+}
+
+function updateStepInfo() {
+	stepInfo.textContent = `Step ${currentStep} of ${totalSteps}`;
+}
+
+function nextStep() {
+	if (!validateStep()) return;
+
+	inflationCounter++;
+
+	if (inflationCounter % 2 === 0) {
+		totalSteps += Math.floor(Math.random() * 3) + 1;
+		message.textContent = "Extended verification required.";
+	}
+
+	currentStep++;
+
+	if (currentStep > totalSteps) {
+		nearSuccess();
+	} else {
+		renderStep();
+	}
+}
+
+function nearSuccess() {
+	progressFill.style.width = "100%";
+	taskArea.innerHTML = `
+		<div class="task">
+			Verification complete.<br>
+			Final review in progress…
+		</div>
+	`;
+	message.textContent = "";
+
+	setTimeout(() => {
+		totalSteps += 4;
+		message.textContent = "Final review expanded scope of verification.";
+		renderStep();
+	}, 3000);
+}
+</script>
+</body>
+</html>
