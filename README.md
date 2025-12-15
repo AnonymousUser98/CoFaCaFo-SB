@@ -35,6 +35,25 @@ This one is just like a slider CAPTCHA (where you need to slide the slider from 
 <img width="791" height="455" alt="screenshot" src="https://github.com/user-attachments/assets/0ad338e3-4c84-4977-9975-f452b3e929d6" />\
 It asks you to click a button, you move your cursor near the button, and the button moves to a random position. Unless you have a touchscreen, it's impossible to actually click the button (and when you do, it doesn't do anything).
 
+## Are we there yet?
+**File:** `AreWeThereYet.html`
+
+<img width="810" height="519" alt="screenshot" src="https://github.com/user-attachments/assets/354795ba-2902-4ada-bb59-6b0d9b4c63f0" />\
+Don't worry, you just need to do 5 simple tasks. Oh wait, make that 6 simple tasks. Or is it 8 simple tasks?
+This fake CAPTCHA looks like a simple 5-step process, but it keeps adding more steps.
+
+## Maybe Pictures
+**File:** `InstructionDrift.html`
+
+<img width="760" height="928" alt="screenshot" src="https://github.com/user-attachments/assets/102dd9b4-de63-4925-9bdc-6cc6ef5ea9ac" />\
+Just like an endless image CAPTCHA, but with some interesting questions. Please select all the images that are remotely related to something that might contain a dog.
+
+## Impossible Typing Test
+**File:** `TypingTest.html`
+
+<img width="872" height="762" alt="screenshot" src="https://github.com/user-attachments/assets/0263f151-2746-48a8-8125-b4993258e57f" />\
+Type the words that appear before they reach the bottom of the screen. It starts out simple, but you'll eventually find yourself trying to type "pneumonoultramicroscopicsilicovolcanoconiosis" in less than 10 seconds.
+
 # Other Information
 The name _CoFaCaFo-SB_ stands for **Co**llection of **Fa**ke **CA**PTCHAs **fo**r **S**cam**b**aiters. The letter _O_ is pronounced like the one in "code", and the _A_ is pronounced like the one in "hat". The _SB_ letters at the end are pronounced individually (you say each letter).
 
