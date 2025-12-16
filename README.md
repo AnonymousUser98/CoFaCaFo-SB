@@ -45,19 +45,19 @@ This fake CAPTCHA looks like a simple 5-step process, but it keeps adding more s
 ## Maybe Pictures
 **File:** `InstructionDrift.html`
 
-<img width="760" height="928" alt="screenshot" src="https://github.com/user-attachments/assets/102dd9b4-de63-4925-9bdc-6cc6ef5ea9ac" />\
+<img width="380" height="464" alt="screenshot" src="https://github.com/user-attachments/assets/102dd9b4-de63-4925-9bdc-6cc6ef5ea9ac" />\
 Just like an endless image CAPTCHA, but with some interesting questions. Please select all the images that are remotely related to something that might contain a dog.
 
 ## Impossible Typing Test
 **File:** `TypingTest.html`
 
-<img width="872" height="762" alt="screenshot" src="https://github.com/user-attachments/assets/0263f151-2746-48a8-8125-b4993258e57f" />\
+<img width="436" height="381" alt="screenshot" src="https://github.com/user-attachments/assets/0263f151-2746-48a8-8125-b4993258e57f" />\
 Type the words that appear before they reach the bottom of the screen. It starts out simple, but you'll eventually find yourself trying to type "pneumonoultramicroscopicsilicovolcanoconiosis" in less than 10 seconds.
 
 ## Describe the Image
 **File:** `DescribePhoto.html`
 
-<img width="316" height="336" alt="screenshot" src="https://github.com/user-attachments/assets/8b744512-86da-400d-86ec-92ca8149c012" />\
+<img width="474" height="504" alt="screenshot" src="https://github.com/user-attachments/assets/8b744512-86da-400d-86ec-92ca8149c012" />\
 This CAPTCHA shows you a random image from Picsum and makes you describe it. It claims to "analyze your response", and then it just repeats.
 
 # Other Information
