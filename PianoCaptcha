@@ -1,0 +1,188 @@
+<!-- Author: Terminator97 - https://github.com/terminator-97 -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>🎹 Piano Captcha – Are You Human?</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body, h1, p, button, #sequence {
+    font-family: "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",Arial,sans-serif;
+    background:#111;
+    color:#eee;
+    text-align:center;
+    margin:0;
+    padding:20px;
+}
+
+#status { margin:15px;font-size:18px;min-height:24px; }
+#sequence { color:#0f0;margin-bottom:15px; }
+
+.piano { display:flex; justify-content:center; flex-wrap:wrap; user-select:none; }
+
+.key {
+    width:50px; height:200px; background:white; color:black;
+    border:1px solid #000; margin:1px; cursor:pointer;
+    display:flex; align-items:flex-end; justify-content:center;
+    font-weight:bold; position:relative;
+}
+.key.black { width:35px; height:130px; background:black; color:white; margin-left:-17px; margin-right:-17px; z-index:2; }
+.key.active:not(.wrong):not(.correct-hint):not(.last-note) { background:#ff0 !important; }
+.key.wrong { background:#ff4444 !important; color:white; }
+.key.correct-hint { background:#3fa9ff !important; color:white; }
+.key.last-note { background:#4caf50 !important; color:white; }
+
+button { margin-top:20px; padding:10px 20px; font-size:16px; cursor:pointer; }
+</style>
+</head>
+<body>
+
+<h1>🎹 Piano Captcha</h1>
+<p>Play the melody. Humans only 🎵</p>
+
+<div id="status">Press Start</div>
+<div id="sequence"></div>
+
+<button onclick="startGame()">Start</button>
+<div class="piano" id="piano"></div>
+
+<script>
+const debug = false;
+const startOver = true;
+const AudioContext = window.AudioContext || window.webkitAudioContext;
+const audioCtx = new AudioContext();
+
+const notes = {
+ C4:261.63,"C#4":277.18,D4:293.66,"D#4":311.13,E4:329.63,
+ F4:349.23,"F#4":369.99,G4:392,"G#4":415.3,A4:440,"A#4":466.16,B4:493.88,
+ C5:523.25,"C#5":554.37,D5:587.33,"D#5":622.25,E5:659.25,
+ F5:698.46,"F#5":739.99,G5:783.99,"G#5":830.61,A5:880,"A#5":932.33,B5:987.77,
+ D6:1174.66
+};
+
+const captchaSequence = [
+"F5","E5","F5","A5","E5","D5","C5","D5","F5","A5","A#5","A5","A#5","D6","A5","G5","F5","G5","D5","A5",
+"F5","E5","F5","A5","E5","D5","C5","D5","F5","A5","A#5","A5","A#5","D6","A5","G5","F5","G5","D5","A5",
+"D5","D5","D5","E5","F5","C5","G5","F5","D5","C#5","D5","E5","A4","A5",
+"D5","D5","D5","D5","E5","F5","C5","G5","F5","F5","G5","A5","F5","G5","A5","F5","G5","A5","D5","E5","F5","A5",
+"A#5","G5","C5","A5","A5","A5","A#5","A5","G5","F5","G5","G5","G5","A5","G5","F5","E5","F5","F5","G5","F5","E5","F5","A5"
+];
+
+let sequence=[], userInput=[], locked=false, playingDemo=false;
+const piano=document.getElementById("piano");
+const status=document.getElementById("status");
+const seqDiv=document.getElementById("sequence");
+
+/* ===== CREATE KEYS ===== */
+Object.keys(notes).forEach(n=>{
+ const k=document.createElement("div");
+ k.className="key"+(n.includes("#")?" black":"");
+ k.innerText=n;
+ k.onclick=()=>pressKey(n);
+ piano.appendChild(k);
+});
+
+function getKey(note){ return [...piano.children].find(k=>k.innerText===note); }
+
+/* ===== AUDIO ===== */
+function playNote(note,d=500){
+ const osc=audioCtx.createOscillator();
+ const g=audioCtx.createGain();
+ osc.type="sine";
+ osc.frequency.value=notes[note];
+ osc.connect(g); g.connect(audioCtx.destination);
+
+ g.gain.setValueAtTime(0.001,audioCtx.currentTime);
+ g.gain.exponentialRampToValueAtTime(0.5,audioCtx.currentTime+0.01);
+ g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+d/1000);
+
+ osc.start();
+ osc.stop(audioCtx.currentTime+d/1000);
+
+ const k=getKey(note);
+ if(k && !k.classList.contains("wrong") && !k.classList.contains("correct-hint")){
+  k.classList.add("active");
+  setTimeout(()=>k.classList.remove("active"),d);
+ }
+}
+
+/* ===== GAME ===== */
+function startGame(){
+ sequence=[]; userInput=[]; locked=true; playingDemo=true;
+ status.innerText="Listen carefully… 🎧";
+ nextRound();
+}
+
+function nextRound(){
+ userInput=[];
+ const addCount = Math.floor(Math.random()*4)+1; // 1–3 notes
+ for(let i=0;i<addCount;i++){
+   sequence.push(captchaSequence[sequence.length % captchaSequence.length]);
+ }
+ seqDiv.innerText = debug ? sequence.join(" ") : "";
+ playSequence();
+}
+
+function playSequence(){
+ playingDemo=true;
+ locked=true;
+ let t=0;
+ sequence.forEach(n=>{
+  setTimeout(()=>playNote(n),t);
+  t+=650;
+ });
+ setTimeout(()=>{
+  playingDemo=false;
+  locked=false;
+  status.innerText="Your turn 🎵";
+ },t);
+}
+
+function pressKey(note){
+ if(locked || playingDemo) return;
+ playNote(note);
+ userInput.push(note);
+ const i=userInput.length-1;
+
+ if(note!==captchaSequence[i]){
+  locked=true;
+  status.innerText="❌ Wrong note. Definitely a robot.";
+  const wrongKey=getKey(note);
+  const correctKey=getKey(captchaSequence[i]);
+  wrongKey?.classList.remove("active");
+  correctKey?.classList.remove("active");
+  wrongKey?.classList.add("wrong");
+  correctKey?.classList.add("correct-hint");
+  setTimeout(()=>{
+   wrongKey?.classList.remove("wrong");
+   correctKey?.classList.remove("correct-hint");
+   sequence=[]; userInput=[];
+   if(startOver) startGame();
+   locked=false;
+  },1250);
+  return;
+ }
+
+ // Only highlight the last note of the current round
+ if(userInput.length === sequence.length){
+   const lastKey = getKey(note);
+   lastKey?.classList.add("last-note");
+   setTimeout(()=>lastKey?.classList.remove("last-note"),700);
+ }
+
+ if(userInput.length===captchaSequence.length){
+  status.innerText="⚠️ Suspicious activity detected, please repeat verification.";
+  sequence=[]; userInput=[]; locked=true;
+  return;
+ }
+
+ if(userInput.length===sequence.length){
+  status.innerText="✅ Correct… next round";
+  locked=true;
+  setTimeout(nextRound,1000);
+ }
+}
+</script>
+</body>
+</html>
